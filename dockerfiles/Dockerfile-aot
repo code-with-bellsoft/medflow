@@ -1,0 +1,57 @@
+FROM bellsoft/hardened-liberica-runtime-container:jdk-25-musl AS builder
+
+WORKDIR /workspace
+
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+COPY src/ src/
+
+
+# -Pnatiactivates Spring Boot's process-aot goal.
+RUN ./mvnw -Pnative clean package
+
+RUN mkdir /workspace/extracted \
+    && java -Djarmode=tools \
+       -jar target/med-flow-*.jar \
+       extract \
+       --layers \
+       --destination /workspace/extracted
+
+
+FROM bellsoft/hardened-liberica-runtime-container:jre-25-nonroot-musl AS trainer
+
+WORKDIR /application
+
+COPY --from=builder /workspace/extracted/dependencies/ ./
+COPY --from=builder /workspace/extracted/spring-boot-loader/ ./
+COPY --from=builder /workspace/extracted/snapshot-dependencies/ ./
+COPY --from=builder /workspace/extracted/application/ ./
+
+RUN java \
+    -Dspring.aot.enabled=true \
+    -Dspring.profiles.active=aot \
+    -XX:AOTCacheOutput=/tmp/app.aot \
+    -Dspring.context.exit=onRefresh \
+    -jar application.jar
+
+
+FROM bellsoft/hardened-liberica-runtime-container:jre-25-nonroot-musl
+
+WORKDIR /application
+
+COPY --from=builder /workspace/extracted/dependencies/ ./
+COPY --from=builder /workspace/extracted/spring-boot-loader/ ./
+COPY --from=builder /workspace/extracted/snapshot-dependencies/ ./
+COPY --from=builder /workspace/extracted/application/ ./
+
+COPY --from=trainer /tmp/app.aot ./app.aot
+
+EXPOSE 8080
+
+ENTRYPOINT [
+    "java",
+    "-Dspring.aot.enabled=true",
+    "-XX:AOTCache=app.aot",
+    "-jar",
+    "application.jar"
+]

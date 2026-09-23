@@ -16,5 +16,34 @@ services:
     volumes:
       - medflow_pgdata:/var/lib/postgresql/data
 
+app:
+  build:
+    context: .
+    dockerfile: ./dockerfiles/Dockerfile${SUFFIX}
+
+  image: medflow:latest
+  container_name: medflow-app
+
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+  environment:
+    SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medflow
+    SPRING_DATASOURCE_USERNAME: meduser
+    SPRING_DATASOURCE_PASSWORD: medpass
+
+    JDK_JAVA_OPTIONS: >-
+      -XX:MaxRAMPercentage=70
+      -XX:+UseG1GC
+
+    cpus: 2.0
+    mem_limit: 1g
+
+  stop_grace_period: 30s
+
+  ports:
+    - "8080:8080"
+
 volumes:
   medflow_pgdata:

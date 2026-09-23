@@ -1,0 +1,60 @@
+FROM bellsoft/hardened-liberica-runtime-container:jdk-all-25-musl AS builder
+
+WORKDIR /app
+
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
+COPY src src
+
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw clean package \
+    && cp target/*-spring-boot.jar application.jar
+
+RUN java -Djarmode=tools \
+    -jar application.jar \
+    extract --layers --destination extracted
+
+# Overlay the Spring layers temporarily so jdeps sees the application
+# in the same structure in which it will run.
+RUN mkdir analysis \
+    && cp -a extracted/dependencies/. analysis/ \
+    && cp -a extracted/spring-boot-loader/. analysis/ \
+    && cp -a extracted/snapshot-dependencies/. analysis/ \
+    && cp -a extracted/application/. analysis/
+
+# EXTRA_MODULES is for modules needed only dynamically
+# and therefore invisible to static jdeps analysis.
+ARG EXTRA_MODULES=""
+
+RUN MODULES="$(jdeps \
+        --ignore-missing-deps \
+        --multi-release 25 \
+        --print-module-deps \
+        --class-path 'analysis/lib/*' \
+        analysis/application.jar)" \
+    && if [ -n "$EXTRA_MODULES" ]; then \
+         MODULES="${MODULES},${EXTRA_MODULES}"; \
+       fi \
+    && echo "JDK modules: ${MODULES}" \
+    && jlink \
+        --add-modules "${MODULES}" \
+        --compress=2 \
+        --strip-debug \
+        --no-header-files \
+        --no-man-pages \
+        --output /jlink-runtime
+
+
+FROM bellsoft/hardened-base:nonroot-musl
+
+WORKDIR /app
+
+COPY --from=builder /jlink-runtime /jlink-runtime
+COPY --from=builder /app/extracted/dependencies/ ./
+COPY --from=builder /app/extracted/spring-boot-loader/ ./
+COPY --from=builder /app/extracted/snapshot-dependencies/ ./
+COPY --from=builder /app/extracted/application/ ./
+
+EXPOSE 8080
+
+ENTRYPOINT ["/jlink-runtime/bin/java", "-jar", "/app/application.jar"]
