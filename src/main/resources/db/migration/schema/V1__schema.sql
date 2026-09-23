@@ -7,12 +7,12 @@ CREATE TYPE lab_result_status AS ENUM ('READY', 'PENDING', 'FAILED');
 
 CREATE TABLE district (
                           id          BIGSERIAL PRIMARY KEY,
-                          name        TEXT NOT NULL UNIQUE
+                          name        VARCHAR(200) NOT NULL UNIQUE
 );
 
 CREATE TABLE facility (
                           id          BIGSERIAL PRIMARY KEY,
-                          name        TEXT NOT NULL UNIQUE,
+                          name        VARCHAR(200) NOT NULL UNIQUE,
                           type        facility_type NOT NULL,
                           district_id BIGINT NOT NULL REFERENCES district(id)
 );
@@ -29,14 +29,14 @@ CREATE INDEX idx_facility_link_to ON facility_link(to_facility_id);
 
 CREATE TABLE specialty (
                            id    BIGSERIAL PRIMARY KEY,
-                           name  TEXT NOT NULL UNIQUE
+                           name  VARCHAR(100) NOT NULL UNIQUE
 );
 
 CREATE TABLE staff (
                        id          BIGSERIAL PRIMARY KEY,
                        facility_id BIGINT NOT NULL REFERENCES facility(id) ON DELETE CASCADE,
                        specialty_id BIGINT NOT NULL REFERENCES specialty(id),
-                       handle      TEXT NOT NULL,
+                       handle      VARCHAR(100) NOT NULL,
                        active      BOOLEAN NOT NULL DEFAULT TRUE,
                        UNIQUE (facility_id, handle)
 );
@@ -45,7 +45,7 @@ CREATE INDEX idx_staff_facility_specialty ON staff(facility_id, specialty_id);
 
 CREATE TABLE patient (
                          id         BIGSERIAL PRIMARY KEY,
-                         public_ref TEXT NOT NULL UNIQUE,
+                         public_ref VARCHAR(100) NOT NULL UNIQUE,
                          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -91,7 +91,7 @@ CREATE TABLE lab_order (
                            id            BIGSERIAL PRIMARY KEY,
                            triage_case_id BIGINT NOT NULL REFERENCES triage_case(id) ON DELETE CASCADE,
                            lab_facility_id BIGINT NOT NULL REFERENCES facility(id),
-                           test_code      TEXT NOT NULL,
+                           test_code      VARCHAR(100) NOT NULL,
                            ordered_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

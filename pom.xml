@@ -129,30 +129,45 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <jdbc>
-                        <driver>org.postgresql.Driver</driver>
-                        <url>jdbc:postgresql://localhost:5433/medflow</url>
-                        <user>meduser</user>
-                        <password>medpass</password>
-                    </jdbc>
                     <generator>
                         <database>
-                            <name>org.jooq.meta.postgres.PostgresDatabase</name>
-                            <inputSchema>public</inputSchema>
+                            <name>org.jooq.meta.extensions.ddl.DDLDatabase</name>
+
                             <includes>.*</includes>
-                            <excludes>flyway_schema_history</excludes>
+
+                            <properties>
+                                <property>
+                                    <key>scripts</key>
+                                    <value>${project.basedir}/src/main/resources/db/migration/schema/*.sql</value>                                </property>
+
+                                <property>
+                                    <key>sort</key>
+                                    <value>flyway</value>
+                                </property>
+
+                                <property>
+                                    <key>unqualifiedSchema</key>
+                                    <value>public</value>
+                                </property>
+
+                                <property>
+                                    <key>defaultNameCase</key>
+                                    <value>lower</value>
+                                </property>
+                            </properties>
                         </database>
 
                         <target>
                             <packageName>dev.cyberjar.medflow</packageName>
-                            <directory>${project.build.directory}/generated-sources/jooq</directory>                        </target>
+                            <directory>${project.build.directory}/generated-sources/jooq</directory>
+                        </target>
                     </generator>
                 </configuration>
                 <dependencies>
                     <dependency>
-                        <groupId>org.postgresql</groupId>
-                        <artifactId>postgresql</artifactId>
-                        <version>${postgresql.version}</version>
+                        <groupId>org.jooq</groupId>
+                        <artifactId>jooq-meta-extensions</artifactId>
+                        <version>${jooq.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
