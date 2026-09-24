@@ -4,14 +4,15 @@ WORKDIR /workspace
 
 COPY ../pom.xml mvnw ./
 COPY ../.mvn .mvn
+RUN chmod +x mvnw
 COPY ../src src
 
-RUN ./mvnw clean package
-
+RUN ./mvnw package \
+    && cp target/med-flow-*.jar application.jar
 
 RUN mkdir /workspace/extracted \
     && java -Djarmode=tools \
-       -jar target/med-flow-*.jar \
+       -jar application.jar \
        extract \
        --layers \
        --destination /workspace/extracted

@@ -1,14 +1,15 @@
 FROM bellsoft/hardened-liberica-runtime-container:jdk-all-25-musl AS builder
 
-WORKDIR /app
+WORKDIR /workspace
 
-COPY pom.xml mvnw ./
-COPY .mvn .mvn
-COPY src src
+COPY ../pom.xml mvnw ./
+COPY ../.mvn .mvn
+RUN chmod +x mvnw
+COPY ../src src
 
-RUN --mount=type=cache,target=/root/.m2 \
-    ./mvnw clean package \
-    && cp target/*-spring-boot.jar application.jar
+
+RUN ./mvnw package \
+     && cp target/med-flow-*.jar application.jar
 
 RUN java -Djarmode=tools \
     -jar application.jar \
@@ -47,14 +48,14 @@ RUN MODULES="$(jdeps \
 
 FROM bellsoft/hardened-base:nonroot-musl
 
-WORKDIR /app
+WORKDIR /application
 
 COPY --from=builder /jlink-runtime /jlink-runtime
-COPY --from=builder /app/extracted/dependencies/ ./
-COPY --from=builder /app/extracted/spring-boot-loader/ ./
-COPY --from=builder /app/extracted/snapshot-dependencies/ ./
-COPY --from=builder /app/extracted/application/ ./
+COPY --from=builder /workspace/extracted/dependencies/ ./
+COPY --from=builder /workspace/extracted/spring-boot-loader/ ./
+COPY --from=builder /workspace/extracted/snapshot-dependencies/ ./
+COPY --from=builder /workspace/extracted/application/ ./
 
 EXPOSE 8080
 
-ENTRYPOINT ["/jlink-runtime/bin/java", "-jar", "/app/application.jar"]
+ENTRYPOINT ["/jlink-runtime/bin/java", "-jar", "application.jar"]
