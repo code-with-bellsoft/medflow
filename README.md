@@ -31,12 +31,17 @@ MedFlow is a **Spring Boot REST service** for managing **healthcare appointment 
 - **Staff**
     - List staff by specialty
 
-## How to run the application
+## How to run the application locally
+
+Export a database password:
+```shell
+export MEDFLOW_DB_PASSWORD=medpass
+```
 
 Spin up a database instance:
 
 ```shell
-docker compose up -d
+docker compose up -d postgres
 ```
 
 for the backend service, run Flyway migrations to create a schema and seed test data:
@@ -56,3 +61,16 @@ After that, you can run the application:
 ```shell
 mvn spring-boot:run
 ```
+
+## How to run the application in a container
+
+Export a database password:
+```shell
+export MEDFLOW_DB_PASSWORD=medpass
+```
+
+Pick a Dockerfile with the SUFFIX variable (leave SUFFIX empty for the plain extracted-jar image):
+```shell
+SUFFIX=-jlink docker compose up --build
+```
+

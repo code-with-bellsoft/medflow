@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: medflow
       POSTGRES_USER: meduser
-      POSTGRES_PASSWORD: medpass
+      POSTGRES_PASSWORD: ${MEDFLOW_DB_PASSWORD}
     ports:
       - "5433:5432"
     healthcheck:
@@ -31,7 +31,7 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medflow
       SPRING_DATASOURCE_USERNAME: meduser
-      SPRING_DATASOURCE_PASSWORD: medpass
+      SPRING_DATASOURCE_PASSWORD: ${MEDFLOW_DB_PASSWORD}
 
       JDK_JAVA_OPTIONS: >-
         -XX:MaxRAMPercentage=70
