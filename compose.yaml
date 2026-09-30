@@ -37,8 +37,8 @@ services:
         -XX:MaxRAMPercentage=70
         -XX:+UseG1GC
 
-      cpus: 2.0
-      mem_limit: 1g
+    cpus: 2.0
+    mem_limit: 1g
 
     stop_grace_period: 25s
 
