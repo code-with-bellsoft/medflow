@@ -86,12 +86,12 @@ And then:
 docker build --secret id=settings,src=$HOME/.m2/settings.xml .
 ```
 
-BellSoft Hardened Images come with an SBOM and a digital signature, so in you pipeline you can verify the attestation against [BellSoft's public key](https://download.bell-sw.com/pki/cosign-bellsoft.pub) and retrieve an SBOM with, for example, cosign:
+BellSoft Hardened Images come with an SBOM and a digital signature, so in you pipeline you can verify the attestation against [BellSoft's public key](https://download.bell-sw.com/pki/cosign-bellsoft.pub) and retrieve+safe an SBOM with, for example, cosign:
 
 ```shell
 IMG='docker.io/bellsoft/hardened-liberica-runtime-container:jre-25-nonroot-musl'
 cosign verify-attestation \
     --key ~/keys/cosign-bellsoft.pub \
     --type cyclonedx \
-    $IMG | jq -r '.payload' | base64 -d | jq '.predicate'
+    $IMG | jq -r '.payload' | base64 -d | jq '.predicate' > sbom.cdx.json
 ```
