@@ -74,3 +74,24 @@ Pick a Dockerfile with the SUFFIX variable (leave SUFFIX empty for the plain ext
 SUFFIX=-jlink docker compose up --build
 ```
 
+If the build pulls from a private Maven or Git repository, you can mount the credentials with a BuildKit secret mount, which exists for the duration of one RUN instruction and is not stored in a layer:
+
+```dockerfile
+RUN --mount=type=secret,id=settings,target=/root/.m2/settings.xml \
+./mvnw package
+```
+
+And then:
+```shell
+docker build --secret id=settings,src=$HOME/.m2/settings.xml .
+```
+
+BellSoft Hardened Images come with an SBOM and a digital signature, so in you pipeline you can verify the attestation against [BellSoft's public key](https://download.bell-sw.com/pki/cosign-bellsoft.pub) and retrieve an SBOM with, for example, cosign:
+
+```shell
+IMG='docker.io/bellsoft/hardened-liberica-runtime-container:jre-25-nonroot-musl'
+cosign verify-attestation \
+    --key ~/keys/cosign-bellsoft.pub \
+    --type cyclonedx \
+    $IMG | jq -r '.payload' | base64 -d | jq '.predicate'
+```

@@ -119,6 +119,8 @@
                         <pullPolicy>ALWAYS</pullPolicy>
                         <env>
                             <BP_JVM_VERSION>25</BP_JVM_VERSION>
+<!--                            <BP_JVM_JLINK_ENABLED>true</BP_JVM_JLINK_ENABLED>-->
+<!--                            <BP_JVM_AOTCACHE_ENABLED>true</BP_JVM_AOTCACHE_ENABLED>-->
                         </env>
                     </image>
                 </configuration>
