@@ -2,10 +2,10 @@ FROM bellsoft/hardened-liberica-runtime-container:jdk-all-25-musl AS builder
 
 WORKDIR /workspace
 
-COPY ../pom.xml mvnw ./
-COPY ../.mvn .mvn
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
 RUN chmod +x mvnw
-COPY ../src src
+COPY src src
 
 
 RUN ./mvnw package \

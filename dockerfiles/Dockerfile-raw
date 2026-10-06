@@ -1,0 +1,17 @@
+FROM bellsoft/hardened-liberica-runtime-container:jdk-25-musl
+
+WORKDIR /workspace
+
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
+RUN chmod +x mvnw
+COPY src src
+
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw clean package \
+    && cp target/*-spring-boot.jar /workspace/app.jar \
+    && rm -rf src target .mvn mvnw pom.xml
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
