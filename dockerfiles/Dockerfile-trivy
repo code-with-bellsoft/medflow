@@ -1,0 +1,2 @@
+FROM bellsoft/alpaquita-linux-base:stream-musl
+RUN apk add trivy

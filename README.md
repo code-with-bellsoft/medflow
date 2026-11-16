@@ -95,3 +95,19 @@ cosign verify-attestation \
     --type cyclonedx \
     $IMG | jq -r '.payload' | base64 -d | jq '.predicate' > sbom.cdx.json
 ```
+
+## GitHub Actions: hardened base image security gate
+
+The demo workflow at [`.github/workflows/trivy-scan.yml`](.github/workflows/trivy-scan.yml) checks the security of MedFlow's hardened **runtime base image before building the application image**. It runs on pushes to `main`, pull requests, and manual dispatches.
+
+The workflow:
+
+1. Builds a Trivy scanner container using `dockerfiles/Dockerfile.trivy`, based on BellSoft Alpaquita Linux.
+2. Pulls the hardened JRE image used in the **final stage** of `dockerfiles/Dockerfile`: `bellsoft/hardened-liberica-runtime-container:jre-25-nonroot-musl`.
+3. Runs Trivy inside the Alpaquita container against the locally pulled image, using the GitHub runner's Docker socket. The scan checks vulnerabilities with `--severity CRITICAL --exit-code 1`.
+4. **Builds the MedFlow application image only if the base-image scan succeeds**, skipping Maven test compilation and execution.
+5. Executes an `echo` placeholder for a future security or delivery process.
+
+A CRITICAL vulnerability in the hardened JRE base image, or a Trivy scanning error, **fails the job and prevents the application build**. Lower-severity findings do not block it.
+
+This is deliberately a minimal demonstration: it does **not** scan the JDK builder image or the completed MedFlow image, run tests or other verification jobs, verify signatures or attestations, or publish the application image. The attestation commands above are examples for manual use, not part of this workflow.

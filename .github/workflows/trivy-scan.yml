@@ -1,0 +1,49 @@
+name: MedFlow - Base Image Security Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  container-security:
+    runs-on: ubuntu-latest
+
+    env:
+      RUNTIME_BASE: bellsoft/hardened-liberica-runtime-container:jre-25-nonroot-musl
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Alpaquita Trivy image
+        run: |
+          docker build \
+            -f dockerfiles/Dockerfile-trivy \
+            -t alpaquita-trivy:ci .
+
+      - name: Pull hardened JRE base image
+        run: docker pull "$RUNTIME_BASE"
+
+      - name: Scan hardened JRE for critical vulnerabilities
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            alpaquita-trivy:ci \
+            trivy image \
+              --image-src docker \
+              --scanners vuln \
+              --severity CRITICAL \
+              --exit-code 1 \
+              --timeout 30m \
+              "$RUNTIME_BASE"
+
+      - name: Build MedFlow image
+        run: |
+          docker build \
+            -f dockerfiles/Dockerfile \
+            -t medflow:ci .
+
+      - name: Security process placeholder
+        run: echo "Your cool security process here"
