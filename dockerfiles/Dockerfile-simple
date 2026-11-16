@@ -1,0 +1,22 @@
+FROM bellsoft/hardened-liberica-runtime-container:jdk-25-musl AS builder
+
+WORKDIR /workspace
+
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
+RUN chmod +x mvnw
+COPY src src
+
+RUN ./mvnw package \
+    && cp target/med-flow-*.jar application.jar
+
+#no JAR layering for more compact demonstration of security scanner results
+
+FROM bellsoft/hardened-liberica-runtime-container:jre-25-nonroot-musl
+
+WORKDIR /application
+COPY --from=builder /workspace/application.jar ./
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "application.jar"]
