@@ -1,2 +1,2 @@
 FROM bellsoft/alpaquita-linux-base:stream-musl
-RUN apk add trivy
+RUN apk add --no-cache trivy grype

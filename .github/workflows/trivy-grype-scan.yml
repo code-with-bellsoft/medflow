@@ -17,16 +17,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Alpaquita Trivy image
+      - name: Build Alpaquita image with scanners
         run: |
           docker build \
-            -f dockerfiles/Dockerfile-trivy \
-            -t alpaquita-trivy:ci .
+            -f dockerfiles/Dockerfile-scanners \
+            -t alpaquita-scanners:ci .
 
       - name: Pull hardened JRE base image
         run: docker pull "$RUNTIME_BASE"
 
-      - name: Scan hardened JRE for critical vulnerabilities
+      - name: Scan hardened JRE with Trivy
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
@@ -38,6 +38,13 @@ jobs:
               --exit-code 1 \
               --timeout 30m \
               "$RUNTIME_BASE"
+
+      - name: Scan hardened JRE with Grype
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            alpaquita-scanners:ci \
+            grype --from docker --fail-on critical "$RUNTIME_BASE"
 
       - name: Build MedFlow image
         run: |
