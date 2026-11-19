@@ -30,7 +30,7 @@ jobs:
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            alpaquita-trivy:ci \
+            alpaquita-scanners:ci \
             trivy image \
               --image-src docker \
               --scanners vuln \
